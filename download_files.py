@@ -12,6 +12,11 @@ from archerdfu.factory.profiles import ProfileBuilder, BallisticProfile
 from rich.progress import Task
 
 
+
+DEFAULT_APP_DIR = os.path.join(os.path.expanduser("~"), "ArcherBC2-Resolver")
+
+os.makedirs(DEFAULT_APP_DIR, exist_ok=True)
+
 class Progress:
     def __init__(self, title="Progress"):
         self.title = title
@@ -61,6 +66,7 @@ class SelectDirectory:
             "Select a directory to save files",
             title="Select Directory",
             no_window=True,  # Directly open the system folder dialog
+            initial_folder=DEFAULT_APP_DIR
         )
         if directory:
             self.directory = directory
@@ -135,8 +141,9 @@ class DeviceDataDownload(ArcherRW):
 
         clicks = profiles.header.c_sight_data.clicks
         now_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+
         directory = os.path.join(
-            "./", directory,
+            directory,
             f"{sanitize_filename(info.serial_number_device)}_{now_date}"
         )
         os.makedirs(directory, exist_ok=True)
