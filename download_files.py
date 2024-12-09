@@ -1,8 +1,15 @@
+import os.path
+import re
+from datetime import datetime
 import FreeSimpleGUI as Sg
-from rich.progress import Task
-from archerdfu.dfus.archrw import ArcherRW
-from archerdfu.factory.profiles import ProfileBuilder, Profile
+from a7p import A7PFile
 from a7p.factory import A7PFactory
+from a7p.protovalidate import ValidationError
+from archerdfu.dfus.archrw import ArcherRW
+from archerdfu.factory.caliber_icon import CaliberIcon
+from archerdfu.factory.profiles import ProfileBuilder, BallisticProfile
+from rich.progress import Task
+
 
 class Progress:
     def __init__(self, title="Progress"):
@@ -29,7 +36,6 @@ class Progress:
         self.progress_window.close()
 
     def update(self, total, completed, message):
-
         _value = round(100 * (completed / total))
 
         progress_bar = self.progress_window['PROGRESS']
@@ -46,14 +52,33 @@ class Progress:
             self.close()
 
 
+class SelectDirectory:
+    def __init__(self):
+        self.directory = "./"
+        # Open a directory selection dialog
+        directory = Sg.popup_get_folder(
+            "Select a directory to save files",
+            title="Select Directory",
+            no_window=True,  # Directly open the system folder dialog
+        )
+        if directory:
+            self.directory = directory
+        else:
+            Sg.popup("No directory selected", title="No Selection", keep_on_top=True)
+
+
 class DeviceDataDownload(ArcherRW):
     def __init__(self):
         super(DeviceDataDownload, self).__init__()
 
     def get_profiles(self):
-        profiles, error = None, None
+        profiles, info, error = None, None, None
+        info_progress = Progress("Downloading info...")
         params_progress = Progress("Downloading params...")
         profiles_progress = Progress("Downloading profiles...")
+
+        def info_callback(task: Task):
+            info_progress.update(task.total, task.completed, "Downloading info")
 
         def params_callback(task: Task):
             params_progress.update(task.total, task.completed, "Downloading params")
@@ -62,10 +87,11 @@ class DeviceDataDownload(ArcherRW):
             profiles_progress.update(task.total, task.completed, "Downloading params")
 
         try:
+            info_progress.open()
+            info = self.read_device_info(callback=info_callback)
             params_progress.open()
-            profiles_progress = Progress("Downloading params...")
-            profiles_progress.open()
             params = self.read_device_params(callback=params_callback)
+            profiles_progress.open()
             profiles_buf = self.read_device_profiles(callback=profiles_callback)
             profiles = ProfileBuilder.parse(profiles_buf, params)
         except ConnectionError as err:
@@ -92,24 +118,129 @@ class DeviceDataDownload(ArcherRW):
         finally:
             params_progress.close()
             profiles_progress.close()
-            return profiles, error
+            info_progress.close()
+            return profiles, info, error
+
+    def compile_a7p(self):
+        directory = SelectDirectory().directory
+        if not directory:
+            Sg.popup("Please select directory where to download the files", title="No directory", keep_on_top=True)
+            return
 
 
-p, err = DeviceDataDownload().get_profiles()
+        profiles, info, err = self.get_profiles()
+        if err:
+            return
+
+        clicks = profiles.header.c_sight_data.clicks
+        now_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
+        directory = os.path.join(directory, f"{sanitize_filename(info.serial_number_device)}_{now_date}")
+        os.makedirs(directory, exist_ok=True)
+
+        for i, p in enumerate(profiles):
+            payload = create_a7p(p, clicks, info.serial_number_device)
+            try:
+                filename = sanitize_filename(f"{i}_{payload.profile.profile_name}_{now_date}_prof.a7p")
+                filename = os.path.join(directory, filename)
+                with open(filename, 'wb') as fp:
+                    A7PFile.dump(payload, fp, validate=True)
+            except ValidationError as err:
+                Sg.popup(f"Error in profile: {i}")
 
 
-print(p[0])
-print()
+def sanitize_filename(name: str) -> str:
+    """
+    Removes or replaces unsupported characters in a file name.
+    Allowed characters are alphanumeric, underscores, and dashes.
+    """
+    # Replace unsupported characters with underscores
+    return re.sub(r'[<>:"/\\|?*]', '_', name)
 
-def create_a7p(profile: Profile):
+
+def stringify_float(value: float) -> str:
+    """
+    Converts a float to a string.
+    If the value has no fractional part after rounding to one decimal place,
+    the decimal point is omitted.
+    """
+    rounded_value = round(value, 1)
+    if rounded_value.is_integer():
+        return str(int(rounded_value))
+    return f"{rounded_value}"
+
+
+def get_drag_type(value):
+    if value == 7:
+        return "G7"
+    if value == 1:
+        return "G1",
+    return "CUSTOM"
+
+
+def get_coef_rows(profile, drag):
+    if profile.bullet.drag_func == 7 or profile.bullet.drag_func == 1:
+        return (A7PFactory.DragPoint(profile.bullet.bal_coeff, 0.),)
+    raise Exception("CUSTOM DF")
+
+
+def round_to_quarter(value):
+    return round(value * 4) / 4
+
+
+def create_a7p(bprofile: BallisticProfile, clicks, serial_num: str):
+    profile, drag = bprofile.profile
+    zeroing = bprofile.zeroing
+    distances = tuple(bprofile.distances)
+
     payload = A7PFactory(
         meta=A7PFactory.Meta(
-            name=profile.get_name()
-        )
+            name=profile.weapon.name,
+            short_name_top=CaliberIcon.trunc_caliber(profile.weapon.cal_name),
+            short_name_bot=f"{stringify_float(profile.bullet.weight)}gr",
+            user_note=f"{profile.weapon.desc}"
+        ),
+        barrel=A7PFactory.Barrel(
+            caliber=profile.weapon.cal_name,
+            sight_height=profile.weapon.sight_height,
+            twist=abs(profile.weapon.twist),
+            twist_dir="RIGHT" if profile.weapon.twist >= 0 else "LEFT",
+        ),
+        cartridge=A7PFactory.Cartridge(
+            name=profile.ammo.name,
+            muzzle_velocity=profile.ammo.v0,
+            temperature=profile.ammo.t0,
+            powder_sens=profile.ammo.powder_sens,
+        ),
+        bullet=A7PFactory.Bullet(
+            name=profile.bullet.name,
+            diameter=profile.bullet.diameter,
+            weight=profile.bullet.weight,
+            length=profile.bullet.length,
+            drag_type=get_drag_type(profile.bullet.drag_func),
+            drag_model=get_coef_rows(profile, drag),
+        ),
+        zeroing=A7PFactory.Zeroing(
+            x=round_to_quarter(zeroing.x / (clicks.pClickX / 1000)),
+            y=round_to_quarter(zeroing.y / (clicks.pClickY / 1000)),
+            pitch=profile.env.angle,
+            distance=profile.weapon.zero_dist,
+        ),
+        zero_atmo=A7PFactory.Atmosphere(
+            temperature=profile.env.temperature,
+            pressure=round(profile.env.pressure * 1.33322),
+            humidity=profile.env.humidity
+        ),
+        zero_powder_temp=profile.env.p_temperature,
+        distances=distances,
+        # switches  # using defaults
     )
 
+    uuid = "00000000-0000-0000-0000-000000000000"
+    uuid = uuid[:-len(serial_num)] + serial_num
 
-class CreateA7P:
-    def __init__(self):
-        ...
+    payload.profile.device_uuid = uuid  # temporary
+    return payload
 
+
+if __name__ == '__main__':
+    DeviceDataDownload().compile_a7p()
