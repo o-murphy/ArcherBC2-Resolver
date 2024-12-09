@@ -1,6 +1,7 @@
 import os.path
 import re
 from datetime import datetime
+
 import FreeSimpleGUI as Sg
 from a7p import A7PFile
 from a7p.factory import A7PFactory
@@ -54,7 +55,7 @@ class Progress:
 
 class SelectDirectory:
     def __init__(self):
-        self.directory = "./"
+        self.directory = ""
         # Open a directory selection dialog
         directory = Sg.popup_get_folder(
             "Select a directory to save files",
@@ -122,30 +123,44 @@ class DeviceDataDownload(ArcherRW):
             return profiles, info, error
 
     def compile_a7p(self):
-        directory = SelectDirectory().directory
-        if not directory:
-            Sg.popup("Please select directory where to download the files", title="No directory", keep_on_top=True)
-            return
-
 
         profiles, info, err = self.get_profiles()
         if err:
             return
 
+        directory = SelectDirectory().directory
+        if not directory:
+            Sg.popup("Please select directory where to download the files", title="No directory", keep_on_top=True)
+            return
+
         clicks = profiles.header.c_sight_data.clicks
         now_date = datetime.now().strftime("%Y_%m_%d_%H_%M_%S")
-        directory = os.path.join(directory, f"{sanitize_filename(info.serial_number_device)}_{now_date}")
+        directory = os.path.join(
+            "./", directory,
+            f"{sanitize_filename(info.serial_number_device)}_{now_date}"
+        )
         os.makedirs(directory, exist_ok=True)
 
-        for i, p in enumerate(profiles):
-            payload = create_a7p(p, clicks, info.serial_number_device)
-            try:
-                filename = sanitize_filename(f"{i}_{payload.profile.profile_name}_{now_date}_prof.a7p")
-                filename = os.path.join(directory, filename)
-                with open(filename, 'wb') as fp:
-                    A7PFile.dump(payload, fp, validate=True)
-            except ValidationError as err:
-                Sg.popup(f"Error in profile: {i}")
+        decompiling_progress = Progress("Decompiling profiles...")
+        decompiling_progress.open()
+        try:
+            for i, p in enumerate(profiles):
+                decompiling_progress.update(len(profiles), i, "Decompiling profiles")
+                try:
+                    payload = create_a7p(p, clicks, info.serial_number_device)
+
+                    filename = sanitize_filename(
+                        f"{i}_{payload.profile.profile_name}_{payload.profile.bullet_name}_{now_date}_prof.a7p"
+                    )
+                    filename = os.path.join(directory, filename)
+                    with open(filename, 'wb') as fp:
+                        A7PFile.dump(payload, fp, validate=True)
+                except ValidationError as err:
+                    Sg.popup(f"Error in profile: {i}")
+                except Exception as err:
+                    Sg.popup(f"Error in profile: {i}")
+        finally:
+            decompiling_progress.close()
 
 
 def sanitize_filename(name: str) -> str:
@@ -180,7 +195,18 @@ def get_drag_type(value):
 def get_coef_rows(profile, drag):
     if profile.bullet.drag_func == 7 or profile.bullet.drag_func == 1:
         return (A7PFactory.DragPoint(profile.bullet.bal_coeff, 0.),)
-    raise Exception("CUSTOM DF")
+    if drag:
+        output_drag = []
+        for container in drag:
+            mach, cd = container.mach, container.cd
+            output_drag.append(
+                A7PFactory.DragPoint(
+                    coeff=cd,
+                    velocity=mach
+                )
+            )
+        return tuple(output_drag)
+    raise Exception("Error on loading drag model")
 
 
 def round_to_quarter(value):
@@ -190,7 +216,10 @@ def round_to_quarter(value):
 def create_a7p(bprofile: BallisticProfile, clicks, serial_num: str):
     profile, drag = bprofile.profile
     zeroing = bprofile.zeroing
-    distances = tuple(bprofile.distances)
+
+    distances = tuple(sorted(
+        d for d in (profile.weapon.zero_dist, *bprofile.distances) if d > 0
+    ))
 
     payload = A7PFactory(
         meta=A7PFactory.Meta(
