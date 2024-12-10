@@ -81,26 +81,19 @@ class DeviceDataDownload(ArcherRW):
     def get_profiles(self):
         profiles, info, error = None, None, None
         info_progress = Progress("Downloading info...")
-        params_progress = Progress("Downloading params...")
         profiles_progress = Progress("Downloading profiles...")
 
         def info_callback(task: Task):
             info_progress.update(task.total, task.completed, "Downloading info")
 
-        def params_callback(task: Task):
-            params_progress.update(task.total, task.completed, "Downloading params")
-
         def profiles_callback(task: Task):
-            profiles_progress.update(task.total, task.completed, "Downloading params")
+            profiles_progress.update(task.total, task.completed, "Downloading profiles")
 
         try:
             info_progress.open()
             info = self.read_device_info(callback=info_callback)
-            params_progress.open()
-            params = self.read_device_params(callback=params_callback)
             profiles_progress.open()
-            profiles_buf = self.read_device_profiles(callback=profiles_callback)
-            profiles = ProfileBuilder.parse(profiles_buf, params)
+            profiles = ProfileBuilder.read_from_dev(self, callback=profiles_callback)
         except ConnectionError as err:
             error = err
             Sg.popup(
@@ -123,10 +116,45 @@ class DeviceDataDownload(ArcherRW):
                 keep_on_top=True
             )
         finally:
-            params_progress.close()
-            profiles_progress.close()
             info_progress.close()
+            profiles_progress.close()
             return profiles, info, error
+
+    def get_reticles(self):
+        reticles, error = None, None
+        reticles_progress = Progress("Downloading reticles...")
+
+        def reticles_callback(task: Task):
+            reticles_progress.update(task.total, task.completed, "Downloading info")
+
+        try:
+            reticles_progress.open()
+            reticles = self.read_device_reticles(callback=reticles_callback)
+        except ConnectionError as err:
+            error = err
+            Sg.popup(
+                "Can't connect to device",
+                title="Error",
+                keep_on_top=True
+            )
+        except IOError as err:
+            error = err
+            Sg.popup(
+                "Error occurred while downloading device data",
+                title="Downloading error",
+                keep_on_top=True
+            )
+        except Exception as err:
+            error = err
+            Sg.popup(
+                error,
+                title="Downloading error",
+                keep_on_top=True
+            )
+        finally:
+            reticles_progress.close()
+            return reticles, error
+
 
     def compile_a7p(self):
 
