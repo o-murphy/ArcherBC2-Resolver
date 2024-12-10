@@ -113,7 +113,28 @@ def a7p2lpc(payload):
             return 9
         raise Exception("Unsupported drag model")
 
+    def get_bc_value(profile):
+        if profile.bc_type == 0 or profile.bc_type == 1:
+            coefs = [row for row in profile.coef_rows if row.bc_cd > 0]
+            if len(coefs) == 1:
+                return coefs[0].bc_cd / 10000
+            if len(coefs) > 1:
+                return 1
+            else:
+                raise Exception("Multi-BC Unsupported yet")
+        if profile.bc_type == 2:
+            return 1
+        raise Exception("Unsupported drag model")
+
+    def get_drag_model(profile):
+        if profile.bc_type == 0 or profile.bc_type == 1:
+            return None
+        if profile.bc_type == 2:
+            return [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
+        raise Exception("Unsupported drag model")
+
     profile = payload.profile
+
     return {
         "profile": {
             "weapon": {
@@ -121,35 +142,35 @@ def a7p2lpc(payload):
                 "desc": profile.user_note,
                 "cal_name": profile.caliber,
                 "sight_height": profile.sc_height,
-                "zero_dist": profile.distances[profile.c_zero_distance_idx] // 100,
+                "zero_dist": int(profile.distances[profile.c_zero_distance_idx] // 100),
                 "twist": (profile.r_twist if profile.twist_dir == 0 else -profile.r_twist) / 100
             },
             "ammo": {
                 "name": profile.cartridge_name,
-                "desc": "",
-                "v0": profile.c_muzzle_velocity // 10,
-                "t0": profile.c_zero_temperature // 1,
+                "desc": profile.cartridge_name,
+                "v0": int(profile.c_muzzle_velocity // 10),
+                "t0": int(profile.c_zero_temperature // 1),
                 "powder_sens": profile.c_t_coeff / 1000
             },
             "bullet": {
                 "name": profile.bullet_name,
                 "drag_func": get_bc_type(profile),
-                "bal_coeff": 0.3179999887943268,
-                "diameter": 0.33799999952316284,
-                "length": 1.5509999990463257,
-                "weight": 250.0
+                "bal_coeff": get_bc_value(profile),
+                "diameter": profile.b_diameter / 1000,
+                "length": profile.b_length / 1000,
+                "weight": profile.b_weight / 10
             },
             "env": {
-                "temperature": 29,
-                "p_temperature": 29,
-                "humidity": 33,
-                "pressure": 753,
-                "wind_speed": 0.0,
-                "wind_angle": 270,
+                "temperature": int(profile.c_zero_air_temperature // 1),
+                "p_temperature": int(profile.c_zero_p_temperature // 1),
+                "humidity": int(profile.c_zero_air_humidity // 1),
+                "pressure":  int(profile.c_zero_air_pressure / 1.33322 // 10),
+                "wind_speed": 0,
+                "wind_angle": 0,
                 "altitude": 0,
-                "angle": 0,
-                "azimuth": 270,
-                "latitude": 75,
+                "angle": int(profile.c_zero_w_pitch // 1),
+                "azimuth": 0,
+                "latitude": 0,
                 "slope": 0
             }
         },
@@ -158,7 +179,7 @@ def a7p2lpc(payload):
             "z": 0,
             "y": -58.533750000000005
         },
-        "drag_func": None,
+        "drag_func": get_drag_model(profile),
         "distances": list(range(100, 1700, 100))
     }
 

@@ -1,0 +1,886 @@
+[profile {
+  profile_name: "338LM"
+  cartridge_name: "SIERRA 250GR HPBT"
+  bullet_name: "SIERRA 250GR HPBT"
+  short_name_top: ".338LM"
+  short_name_bot: "250gr"
+  user_note: "338LM"
+  sc_height: 90
+  r_twist: 1000
+  c_muzzle_velocity: 8840
+  c_zero_temperature: 20
+  c_t_coeff: 900
+  c_zero_air_temperature: 15
+  c_zero_air_pressure: 10130
+  c_zero_air_humidity: 50
+  c_zero_p_temperature: 15
+  b_diameter: 338
+  b_weight: 2500
+  b_length: 1555
+  bc_type: CUSTOM
+  switches {
+    c_idx: 255
+    zoom: 1
+    distance: 10000
+  }
+  switches {
+    c_idx: 255
+    zoom: 2
+    distance: 20000
+  }
+  switches {
+    c_idx: 255
+    zoom: 3
+    distance: 30000
+  }
+  switches {
+    c_idx: 255
+    zoom: 4
+    distance: 100000
+  }
+  distances: 10000
+  distances: 20000
+  distances: 25000
+  distances: 30000
+  distances: 32500
+  distances: 35000
+  distances: 37500
+  distances: 40000
+  distances: 42500
+  distances: 45000
+  distances: 47500
+  distances: 50000
+  distances: 52000
+  distances: 54000
+  distances: 56000
+  distances: 58000
+  distances: 60000
+  distances: 61000
+  distances: 62000
+  distances: 63000
+  distances: 64000
+  distances: 65000
+  distances: 66000
+  distances: 67000
+  distances: 68000
+  distances: 69000
+  distances: 70000
+  distances: 71000
+  distances: 72000
+  distances: 73000
+  distances: 74000
+  distances: 75000
+  distances: 76000
+  distances: 77000
+  distances: 78000
+  distances: 79000
+  distances: 80000
+  distances: 81000
+  distances: 82000
+  distances: 83000
+  distances: 84000
+  distances: 85000
+  distances: 86000
+  distances: 87000
+  distances: 88000
+  distances: 89000
+  distances: 90000
+  distances: 91000
+  distances: 92000
+  distances: 93000
+  distances: 94000
+  distances: 95000
+  distances: 96000
+  distances: 97000
+  distances: 98000
+  distances: 99000
+  distances: 100000
+  distances: 101000
+  distances: 102000
+  distances: 103000
+  distances: 104000
+  distances: 105000
+  distances: 106000
+  distances: 107000
+  distances: 108000
+  distances: 109000
+  distances: 110000
+  distances: 111000
+  distances: 112000
+  distances: 113000
+  distances: 114000
+  distances: 115000
+  distances: 116000
+  distances: 117000
+  distances: 118000
+  distances: 119000
+  distances: 120000
+  distances: 121000
+  distances: 122000
+  distances: 123000
+  distances: 124000
+  distances: 125000
+  distances: 126000
+  distances: 127000
+  distances: 128000
+  distances: 129000
+  distances: 130000
+  distances: 131000
+  distances: 132000
+  distances: 133000
+  distances: 134000
+  distances: 135000
+  distances: 136000
+  distances: 137000
+  distances: 138000
+  distances: 139000
+  distances: 140000
+  coef_rows {
+    bc_cd: 1560
+    mv: 50
+  }
+  coef_rows {
+    bc_cd: 1610
+    mv: 48
+  }
+  coef_rows {
+    bc_cd: 1670
+    mv: 46
+  }
+  coef_rows {
+    bc_cd: 1730
+    mv: 44
+  }
+  coef_rows {
+    bc_cd: 1800
+    mv: 42
+  }
+  coef_rows {
+    bc_cd: 1870
+    mv: 40
+  }
+  coef_rows {
+    bc_cd: 1910
+    mv: 39
+  }
+  coef_rows {
+    bc_cd: 1950
+    mv: 38
+  }
+  coef_rows {
+    bc_cd: 1990
+    mv: 37
+  }
+  coef_rows {
+    bc_cd: 2030
+    mv: 36
+  }
+  coef_rows {
+    bc_cd: 2080
+    mv: 35
+  }
+  coef_rows {
+    bc_cd: 2130
+    mv: 34
+  }
+  coef_rows {
+    bc_cd: 2180
+    mv: 33
+  }
+  coef_rows {
+    bc_cd: 2230
+    mv: 32
+  }
+  coef_rows {
+    bc_cd: 2280
+    mv: 31
+  }
+  coef_rows {
+    bc_cd: 2340
+    mv: 30
+  }
+  coef_rows {
+    bc_cd: 2360
+    mv: 30
+  }
+  coef_rows {
+    bc_cd: 2390
+    mv: 29
+  }
+  coef_rows {
+    bc_cd: 2420
+    mv: 28
+  }
+  coef_rows {
+    bc_cd: 2440
+    mv: 28
+  }
+  coef_rows {
+    bc_cd: 2470
+    mv: 28
+  }
+  coef_rows {
+    bc_cd: 2500
+    mv: 27
+  }
+  coef_rows {
+    bc_cd: 2530
+    mv: 27
+  }
+  coef_rows {
+    bc_cd: 2560
+    mv: 26
+  }
+  coef_rows {
+    bc_cd: 2590
+    mv: 25
+  }
+  coef_rows {
+    bc_cd: 2620
+    mv: 25
+  }
+  coef_rows {
+    bc_cd: 2660
+    mv: 25
+  }
+  coef_rows {
+    bc_cd: 2690
+    mv: 24
+  }
+  coef_rows {
+    bc_cd: 2720
+    mv: 23
+  }
+  coef_rows {
+    bc_cd: 2750
+    mv: 23
+  }
+  coef_rows {
+    bc_cd: 2790
+    mv: 22
+  }
+  coef_rows {
+    bc_cd: 2820
+    mv: 22
+  }
+  coef_rows {
+    bc_cd: 2860
+    mv: 22
+  }
+  coef_rows {
+    bc_cd: 2900
+    mv: 21
+  }
+  coef_rows {
+    bc_cd: 2940
+    mv: 20
+  }
+  coef_rows {
+    bc_cd: 2980
+    mv: 20
+  }
+  coef_rows {
+    bc_cd: 3020
+    mv: 20
+  }
+  coef_rows {
+    bc_cd: 3060
+    mv: 19
+  }
+  coef_rows {
+    bc_cd: 3110
+    mv: 19
+  }
+  coef_rows {
+    bc_cd: 3160
+    mv: 18
+  }
+  coef_rows {
+    bc_cd: 3210
+    mv: 18
+  }
+  coef_rows {
+    bc_cd: 3260
+    mv: 17
+  }
+  coef_rows {
+    bc_cd: 3320
+    mv: 16
+  }
+  coef_rows {
+    bc_cd: 3380
+    mv: 16
+  }
+  coef_rows {
+    bc_cd: 3440
+    mv: 15
+  }
+  coef_rows {
+    bc_cd: 3510
+    mv: 15
+  }
+  coef_rows {
+    bc_cd: 3660
+    mv: 14
+  }
+  coef_rows {
+    bc_cd: 3750
+    mv: 14
+  }
+  coef_rows {
+    bc_cd: 3820
+    mv: 13
+  }
+  coef_rows {
+    bc_cd: 3890
+    mv: 12
+  }
+  coef_rows {
+    bc_cd: 3960
+    mv: 12
+  }
+  coef_rows {
+    bc_cd: 4020
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 4050
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 4070
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 4090
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 4090
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 4060
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 3840
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 3020
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 2070
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1670
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1470
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1380
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1310
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1270
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1250
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1230
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1220
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1210
+    mv: 7
+  }
+  coef_rows {
+    bc_cd: 1210
+    mv: 7
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 6
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 6
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 6
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 5
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 4
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 4
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 3
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 3
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 2
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 2
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 2
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 1
+  }
+  coef_rows {
+    bc_cd: 1200
+    mv: 1
+  }
+  coef_rows {
+    bc_cd: 1200
+  }
+  caliber: ".338 Lapua Magnum"
+  device_uuid: "00000000-0000-0000-0000-000000123456"
+}
+, profile {
+  profile_name: "Accuracy International"
+  cartridge_name: "UKROP 250GR"
+  bullet_name: "UKROP 250GR"
+  short_name_top: ".338LM"
+  short_name_bot: "250gr"
+  user_note: "ACCURACY INTERNATIO"
+  sc_height: 85
+  r_twist: 940
+  c_muzzle_velocity: 8880
+  c_zero_temperature: 29
+  c_t_coeff: 1080
+  c_zero_air_temperature: 15
+  c_zero_air_pressure: 10130
+  c_zero_air_humidity: 50
+  c_zero_p_temperature: 15
+  b_diameter: 338
+  b_weight: 2500
+  b_length: 1555
+  bc_type: G7
+  switches {
+    c_idx: 255
+    zoom: 1
+    distance: 10000
+  }
+  switches {
+    c_idx: 255
+    zoom: 2
+    distance: 20000
+  }
+  switches {
+    c_idx: 255
+    zoom: 3
+    distance: 30000
+  }
+  switches {
+    c_idx: 255
+    zoom: 4
+    distance: 100000
+  }
+  distances: 10000
+  distances: 20000
+  distances: 25000
+  distances: 30000
+  distances: 32500
+  distances: 35000
+  distances: 37500
+  distances: 40000
+  distances: 42500
+  distances: 45000
+  distances: 47500
+  distances: 50000
+  distances: 52000
+  distances: 54000
+  distances: 56000
+  distances: 58000
+  distances: 60000
+  distances: 61000
+  distances: 62000
+  distances: 63000
+  distances: 64000
+  distances: 65000
+  distances: 66000
+  distances: 67000
+  distances: 68000
+  distances: 69000
+  distances: 70000
+  distances: 71000
+  distances: 72000
+  distances: 73000
+  distances: 74000
+  distances: 75000
+  distances: 76000
+  distances: 77000
+  distances: 78000
+  distances: 79000
+  distances: 80000
+  distances: 81000
+  distances: 82000
+  distances: 83000
+  distances: 84000
+  distances: 85000
+  distances: 86000
+  distances: 87000
+  distances: 88000
+  distances: 89000
+  distances: 90000
+  distances: 91000
+  distances: 92000
+  distances: 93000
+  distances: 94000
+  distances: 95000
+  distances: 96000
+  distances: 97000
+  distances: 98000
+  distances: 99000
+  distances: 100000
+  distances: 101000
+  distances: 102000
+  distances: 103000
+  distances: 104000
+  distances: 105000
+  distances: 106000
+  distances: 107000
+  distances: 108000
+  distances: 109000
+  distances: 110000
+  distances: 111000
+  distances: 112000
+  distances: 113000
+  distances: 114000
+  distances: 115000
+  distances: 116000
+  distances: 117000
+  distances: 118000
+  distances: 119000
+  distances: 120000
+  distances: 121000
+  distances: 122000
+  distances: 123000
+  distances: 124000
+  distances: 125000
+  distances: 126000
+  distances: 127000
+  distances: 128000
+  distances: 129000
+  distances: 130000
+  distances: 131000
+  distances: 132000
+  distances: 133000
+  distances: 134000
+  distances: 135000
+  distances: 136000
+  distances: 137000
+  distances: 138000
+  distances: 139000
+  distances: 140000
+  coef_rows {
+    bc_cd: 3140
+  }
+  caliber: ".338 Lapua Magnum"
+  device_uuid: "00000000-0000-0000-0000-000000123456"
+}
+, profile {
+  profile_name: "Accuracy International"
+  cartridge_name: "SCENAR LAPUA 250GR"
+  bullet_name: "SCENAR LAPUA 250GR"
+  short_name_top: ".338LM"
+  short_name_bot: "250gr"
+  user_note: "ACCURACY INTERNATIO"
+  sc_height: 85
+  r_twist: 940
+  c_muzzle_velocity: 8980
+  c_zero_temperature: 15
+  c_t_coeff: 890
+  c_zero_air_temperature: 15
+  c_zero_air_pressure: 10130
+  c_zero_air_humidity: 50
+  c_zero_p_temperature: 15
+  b_diameter: 338
+  b_weight: 2500
+  b_length: 1551
+  bc_type: CUSTOM
+  switches {
+    c_idx: 255
+    zoom: 1
+    distance: 10000
+  }
+  switches {
+    c_idx: 255
+    zoom: 2
+    distance: 20000
+  }
+  switches {
+    c_idx: 255
+    zoom: 3
+    distance: 30000
+  }
+  switches {
+    c_idx: 255
+    zoom: 4
+    distance: 100000
+  }
+  distances: 10000
+  distances: 20000
+  distances: 25000
+  distances: 30000
+  distances: 32500
+  distances: 35000
+  distances: 37500
+  distances: 40000
+  distances: 42500
+  distances: 45000
+  distances: 47500
+  distances: 50000
+  distances: 52000
+  distances: 54000
+  distances: 56000
+  distances: 58000
+  distances: 60000
+  distances: 61000
+  distances: 62000
+  distances: 63000
+  distances: 64000
+  distances: 65000
+  distances: 66000
+  distances: 67000
+  distances: 68000
+  distances: 69000
+  distances: 70000
+  distances: 71000
+  distances: 72000
+  distances: 73000
+  distances: 74000
+  distances: 75000
+  distances: 76000
+  distances: 77000
+  distances: 78000
+  distances: 79000
+  distances: 80000
+  distances: 81000
+  distances: 82000
+  distances: 83000
+  distances: 84000
+  distances: 85000
+  distances: 86000
+  distances: 87000
+  distances: 88000
+  distances: 89000
+  distances: 90000
+  distances: 91000
+  distances: 92000
+  distances: 93000
+  distances: 94000
+  distances: 95000
+  distances: 96000
+  distances: 97000
+  distances: 98000
+  distances: 99000
+  distances: 100000
+  distances: 101000
+  distances: 102000
+  distances: 103000
+  distances: 104000
+  distances: 105000
+  distances: 106000
+  distances: 107000
+  distances: 108000
+  distances: 109000
+  distances: 110000
+  distances: 111000
+  distances: 112000
+  distances: 113000
+  distances: 114000
+  distances: 115000
+  distances: 116000
+  distances: 117000
+  distances: 118000
+  distances: 119000
+  distances: 120000
+  distances: 121000
+  distances: 122000
+  distances: 123000
+  distances: 124000
+  distances: 125000
+  distances: 126000
+  distances: 127000
+  distances: 128000
+  distances: 129000
+  distances: 130000
+  distances: 131000
+  distances: 132000
+  distances: 133000
+  distances: 134000
+  distances: 135000
+  distances: 136000
+  distances: 137000
+  distances: 138000
+  distances: 139000
+  distances: 140000
+  coef_rows {
+    bc_cd: 1800
+    mv: 50
+  }
+  coef_rows {
+    bc_cd: 2000
+    mv: 40
+  }
+  coef_rows {
+    bc_cd: 2280
+    mv: 30
+  }
+  coef_rows {
+    bc_cd: 2520
+    mv: 26
+  }
+  coef_rows {
+    bc_cd: 2640
+    mv: 24
+  }
+  coef_rows {
+    bc_cd: 2760
+    mv: 22
+  }
+  coef_rows {
+    bc_cd: 2890
+    mv: 20
+  }
+  coef_rows {
+    bc_cd: 3040
+    mv: 18
+  }
+  coef_rows {
+    bc_cd: 3210
+    mv: 16
+  }
+  coef_rows {
+    bc_cd: 3300
+    mv: 15
+  }
+  coef_rows {
+    bc_cd: 3400
+    mv: 14
+  }
+  coef_rows {
+    bc_cd: 3500
+    mv: 13
+  }
+  coef_rows {
+    bc_cd: 3600
+    mv: 12
+  }
+  coef_rows {
+    bc_cd: 3630
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 3640
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 3610
+    mv: 11
+  }
+  coef_rows {
+    bc_cd: 3550
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 3370
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 2990
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 2370
+    mv: 10
+  }
+  coef_rows {
+    bc_cd: 1740
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1530
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1390
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1320
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1300
+    mv: 9
+  }
+  coef_rows {
+    bc_cd: 1300
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1300
+    mv: 8
+  }
+  coef_rows {
+    bc_cd: 1310
+    mv: 7
+  }
+  coef_rows {
+    bc_cd: 1650
+    mv: 6
+  }
+  coef_rows {
+    bc_cd: 1650
+    mv: 5
+  }
+  coef_rows {
+    bc_cd: 1650
+    mv: 4
+  }
+  coef_rows {
+    bc_cd: 1650
+  }
+  caliber: ".338 Lapua Magnum"
+  device_uuid: "00000000-0000-0000-0000-000000123456"
+}
+]
