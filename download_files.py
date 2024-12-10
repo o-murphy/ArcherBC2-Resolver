@@ -10,6 +10,7 @@ from archerdfu.dfus.archrw import ArcherRW
 from archerdfu.factory.caliber_icon import CaliberIcon
 from archerdfu.factory.profiles import ProfileBuilder, BallisticProfile
 from rich.progress import Task
+from cutom_popup import ErrorPopup
 
 
 
@@ -20,17 +21,17 @@ os.makedirs(DEFAULT_APP_DIR, exist_ok=True)
 class Progress:
     def __init__(self, title="Progress"):
         self.title = title
-        self.progress_layout = [
+        self._progress_layout = [
             [Sg.Text("Processing...", justification='center', key="counter")],
             [Sg.Text("", justification='center', key="filename", size=(30, 2))],
             [Sg.ProgressBar(max_value=100, orientation='h', size=(30, 20), key='PROGRESS')],
         ]
-        self.progress_window = None
+        self._progress_window = None
 
     def open(self):
-        self.progress_window = Sg.Window(
+        self._progress_window = Sg.Window(
             self.title,
-            self.progress_layout,
+            self._progress_layout,
             modal=True,
             keep_on_top=True,
             finalize=True,
@@ -39,13 +40,14 @@ class Progress:
         self.update(100, 0, self.title)
 
     def close(self):
-        self.progress_window.close()
+        if self._progress_window:
+            self._progress_window.close()
 
     def update(self, total, completed, message):
         _value = round(100 * (completed / total))
 
-        progress_bar = self.progress_window['PROGRESS']
-        counter = self.progress_window['counter']
+        progress_bar = self._progress_window['PROGRESS']
+        counter = self._progress_window['counter']
 
         progress_bar.update(0)
         counter.update(f"{message}: {_value}%")
@@ -96,25 +98,22 @@ class DeviceDataDownload(ArcherRW):
             profiles = ProfileBuilder.read_from_dev(self, callback=profiles_callback)
         except ConnectionError as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 "Can't connect to device",
                 title="Error",
-                keep_on_top=True
-            )
+            ).open()
         except IOError as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 "Error occurred while downloading device data",
                 title="Downloading error",
-                keep_on_top=True
-            )
+            ).open()
         except Exception as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 error,
                 title="Downloading error",
-                keep_on_top=True
-            )
+            ).open()
         finally:
             info_progress.close()
             profiles_progress.close()
@@ -132,25 +131,22 @@ class DeviceDataDownload(ArcherRW):
             reticles = self.read_device_reticles(callback=reticles_callback)
         except ConnectionError as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 "Can't connect to device",
                 title="Error",
-                keep_on_top=True
-            )
+            ).open()
         except IOError as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 "Error occurred while downloading device data",
                 title="Downloading error",
-                keep_on_top=True
-            )
+            ).open()
         except Exception as err:
             error = err
-            Sg.popup(
+            ErrorPopup(
                 error,
                 title="Downloading error",
-                keep_on_top=True
-            )
+            ).open()
         finally:
             reticles_progress.close()
             return reticles, error

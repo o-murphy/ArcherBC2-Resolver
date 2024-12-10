@@ -6,7 +6,7 @@ from a7p.protovalidate import ValidationError
 from archerdfu.factory.profiles import ProfileBuilder, ProfilesPack
 from rich.progress import Task
 
-from cutom_popup import CustomActionPopup
+from cutom_popup import CustomActionPopup, ErrorPopup
 from download_files import DeviceDataDownload, Progress
 
 
@@ -73,6 +73,8 @@ class OpenFiles:
         print("Valid files count:", len(self.data))
         progress_window.close()
 
+class DeviceDataUploader:
+
     @staticmethod
     def open_file(file):
         data, action = None, None
@@ -100,175 +102,172 @@ class OpenFiles:
             ).open()
         return data, action
 
+    @staticmethod
+    def a7p2lpc(payload):
 
-def a7p2lpc(payload):
-
-    def get_bc_type(profile):
-        print(profile.bc_type)
-        if profile.bc_type == 0:
-            return 1
-        if profile.bc_type == 1:
-            return 7
-        if profile.bc_type == 2:
-            return 9
-        raise Exception("Unsupported drag model")
-
-    def get_bc_value(profile):
-        if profile.bc_type == 0 or profile.bc_type == 1:
-            coefs = [row for row in profile.coef_rows if row.bc_cd > 0]
-            if len(coefs) == 1:
-                return coefs[0].bc_cd / 10000
-            if len(coefs) > 1:
+        def get_bc_type(profile):
+            print(profile.bc_type)
+            if profile.bc_type == 0:
                 return 1
-            else:
-                raise Exception("Multi-BC Unsupported yet")
-        if profile.bc_type == 2:
-            return 1
-        raise Exception("Unsupported drag model")
+            if profile.bc_type == 1:
+                return 7
+            if profile.bc_type == 2:
+                return 9
+            raise Exception("Unsupported drag model")
 
-    def get_drag_model(profile):
-        if profile.bc_type == 0 or profile.bc_type == 1:
-            return None
-        if profile.bc_type == 2:
-            return [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
-        raise Exception("Unsupported drag model")
+        def get_bc_value(profile):
+            if profile.bc_type == 0 or profile.bc_type == 1:
+                coefs = [row for row in profile.coef_rows if row.bc_cd > 0]
+                if len(coefs) == 1:
+                    return coefs[0].bc_cd / 10000
+                if len(coefs) > 1:
+                    return 1
+                else:
+                    raise Exception("Multi-BC Unsupported yet")
+            if profile.bc_type == 2:
+                return 1
+            raise Exception("Unsupported drag model")
 
-    profile = payload.profile
+        def get_drag_model(profile):
+            if profile.bc_type == 0 or profile.bc_type == 1:
+                return None
+            if profile.bc_type == 2:
+                return [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
+            raise Exception("Unsupported drag model")
 
-    return {
-        "profile": {
-            "weapon": {
-                "name": profile.profile_name,
-                "desc": profile.user_note,
-                "cal_name": profile.caliber,
-                "sight_height": profile.sc_height,
-                "zero_dist": int(profile.distances[profile.c_zero_distance_idx] // 100),
-                "twist": (profile.r_twist if profile.twist_dir == 0 else -profile.r_twist) / 100
-            },
-            "ammo": {
-                "name": profile.cartridge_name,
-                "desc": profile.cartridge_name,
-                "v0": int(profile.c_muzzle_velocity // 10),
-                "t0": int(profile.c_zero_temperature // 1),
-                "powder_sens": profile.c_t_coeff / 1000
-            },
-            "bullet": {
-                "name": profile.bullet_name,
-                "drag_func": get_bc_type(profile),
-                "bal_coeff": get_bc_value(profile),
-                "diameter": profile.b_diameter / 1000,
-                "length": profile.b_length / 1000,
-                "weight": profile.b_weight / 10
-            },
-            "env": {
-                "temperature": int(profile.c_zero_air_temperature // 1),
-                "p_temperature": int(profile.c_zero_p_temperature // 1),
-                "humidity": int(profile.c_zero_air_humidity // 1),
-                "pressure":  int(profile.c_zero_air_pressure / 1.33322 // 10),
-                "wind_speed": 0,
-                "wind_angle": 0,
-                "altitude": 0,
-                "angle": int(profile.c_zero_w_pitch // 1),
-                "azimuth": 0,
-                "latitude": 0,
-                "slope": 0
-            }
-        },
-        "zeroing": {
-            "x": -27.6705,
-            "z": 0,
-            "y": -58.533750000000005
-        },
-        "drag_func": get_drag_model(profile),
-        "distances": list(range(100, 1700, 100))
-    }
+        profile = payload.profile
 
-
-def compile_lpc():
-    files = SelectFiles().files
-    if not files:
-        return
-
-    datas = OpenFiles(files).data
-    if not datas:
-        return
-
-    # if CustomActionPopup(
-    #         "Are you sure to write data to the device?\nAfter pressing ok you can't undo this action",
-    #         title="ALERT!",
-    #         actions=['Cancel', 'Submit']
-    # ).open() != 'Submit':
-    #     return
-
-    json_image = {
-        "header": {
-            "c_sight_data": {
-                "sight_name": "ARCHER DEVICE",
-                "clicks": {
-                    "pClickX": 1419,
-                    "pClickY": 1419
+        return {
+            "profile": {
+                "weapon": {
+                    "name": profile.profile_name,
+                    "desc": profile.user_note,
+                    "cal_name": profile.caliber,
+                    "sight_height": profile.sc_height,
+                    "zero_dist": int(profile.distances[profile.c_zero_distance_idx] // 100),
+                    "twist": (profile.r_twist if profile.twist_dir == 0 else -profile.r_twist) / 100
+                },
+                "ammo": {
+                    "name": profile.cartridge_name,
+                    "desc": profile.cartridge_name,
+                    "v0": int(profile.c_muzzle_velocity // 10),
+                    "t0": int(profile.c_zero_temperature // 1),
+                    "powder_sens": profile.c_t_coeff / 1000
+                },
+                "bullet": {
+                    "name": profile.bullet_name,
+                    "drag_func": get_bc_type(profile),
+                    "bal_coeff": get_bc_value(profile),
+                    "diameter": profile.b_diameter / 1000,
+                    "length": profile.b_length / 1000,
+                    "weight": profile.b_weight / 10
+                },
+                "env": {
+                    "temperature": int(profile.c_zero_air_temperature // 1),
+                    "p_temperature": int(profile.c_zero_p_temperature // 1),
+                    "humidity": int(profile.c_zero_air_humidity // 1),
+                    "pressure":  int(profile.c_zero_air_pressure / 1.33322 // 10),
+                    "wind_speed": 0,
+                    "wind_angle": 0,
+                    "altitude": 0,
+                    "angle": int(profile.c_zero_w_pitch // 1),
+                    "azimuth": 0,
+                    "latitude": 0,
+                    "slope": 0
                 }
             },
-            "c_envir": {
-                "temperature": 0,
-                "p_temperature": 0,
-                "humidity": 0,
-                "pressure": 0,
-                "wind_speed": 0.0,
-                "wind_angle": 0,
-                "altitude": 0,
-                "angle": 0,
-                "azimuth": 0,
-                "latitude": 0,
-                "slope": 0
-            }
-        },
-        "profiles": [
-            a7p2lpc(payload) for payload in datas
-        ]
-    }
+            "zeroing": {
+                "x": -27.6705,
+                "z": 0,
+                "y": -58.533750000000005
+            },
+            "drag_func": get_drag_model(profile),
+            "distances": [int(p // 100) for p in profile.distances]
+        }
 
-    profiles_progress = Progress("Uploading profiles...")
+    @staticmethod
+    def compile_lpc():
+        files = SelectFiles().files
+        if not files:
+            return
 
-    def profiles_callback(task: Task):
-        profiles_progress.update(task.total, task.completed, "Uploading profiles")
+        datas = OpenFiles(files).data
+        if not datas:
+            return
 
-    try:
-        dev = DeviceDataDownload().find()
-        image = ProfilesPack(**json_image)
-        image.sort()
-        profiles_progress.open()
-        load_status = ProfileBuilder.write_to_dev(dev, image, callback=profiles_callback)
+        if CustomActionPopup(
+                "Are you sure to write data to the device?\nAfter pressing ok you can't undo this action",
+                title="ALERT!",
+                actions=['Cancel', 'Submit']
+        ).open() != 'Submit':
+            return
 
-        if isinstance(load_status, int):
-            if load_status >= 0:
-                print("Uploading success")
-                return
-        raise IOError('Uploading failed')
-    except ConnectionError as err:
-        error = err
-        Sg.popup(
-            "Can't connect to device",
-            title="Error",
-            keep_on_top=True
-        )
-    except IOError as err:
-        error = err
-        Sg.popup(
-            "Error occurred while downloading device data",
-            title="Downloading error",
-            keep_on_top=True
-        )
-    # except Exception as err:
-    #     error = err
-    #     Sg.popup(
-    #         error,
-    #         title="Downloading error",
-    #         keep_on_top=True
-    #     )
-    finally:
-        profiles_progress.close()
+        json_image = {
+            "header": {
+                "c_sight_data": {
+                    "sight_name": "ARCHER DEVICE",
+                    "clicks": {
+                        "pClickX": 1419,
+                        "pClickY": 1419
+                    }
+                },
+                "c_envir": {
+                    "temperature": 0,
+                    "p_temperature": 0,
+                    "humidity": 0,
+                    "pressure": 0,
+                    "wind_speed": 0.0,
+                    "wind_angle": 0,
+                    "altitude": 0,
+                    "angle": 0,
+                    "azimuth": 0,
+                    "latitude": 0,
+                    "slope": 0
+                }
+            },
+            "profiles": [
+                DeviceDataUploader.a7p2lpc(payload) for payload in datas
+            ]
+        }
+
+        profiles_progress = Progress("Uploading profiles...")
+
+        def profiles_callback(task: Task):
+            profiles_progress.update(task.total, task.completed, "Uploading profiles")
+
+        try:
+            dev = DeviceDataDownload().find()
+            image = ProfilesPack(**json_image)
+            image.sort()
+            profiles_progress.open()
+            load_status = ProfileBuilder.write_to_dev(dev, image, callback=profiles_callback)
+
+            if isinstance(load_status, int):
+                if load_status >= 0:
+                    print("Uploading success")
+                    return
+            raise IOError('Uploading failed')
+        except ConnectionError as err:
+            error = err
+            ErrorPopup(
+                "Can't connect to device",
+                title="Error",
+            ).open()
+        except IOError as err:
+            error = err
+            ErrorPopup(
+                "Error occurred while uploading device data",
+                title="Uploading error",
+            ).open()
+        except Exception as err:
+            error = err
+            ErrorPopup(
+                error,
+                title="Uploading error",
+            ).open()
+        finally:
+            profiles_progress.close()
 
 
 if __name__ == "__main__":
-    compile_lpc()
+    DeviceDataUploader.compile_lpc()
