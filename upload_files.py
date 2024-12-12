@@ -1,13 +1,17 @@
-import json
-
 import FreeSimpleGUI as Sg
 from a7p import A7PFile, A7PDataError
 from a7p.protovalidate import ValidationError
 from archerdfu.factory.profiles import ProfileBuilder, ProfilesPack
+from py_ballisticcalc import Unit, DragModelMultiBC, PreferredUnits, BCPoint, TableG7, TableG1
 from rich.progress import Task
 
 from cutom_popup import CustomActionPopup, ErrorPopup
 from download_files import DeviceDataDownload, Progress
+
+PreferredUnits.weight = Unit.Grain
+PreferredUnits.length = Unit.Inch
+PreferredUnits.diameter = Unit.Inch
+PreferredUnits.velocity = Unit.MPS
 
 
 class SelectFiles:
@@ -73,6 +77,7 @@ class OpenFiles:
         print("Valid files count:", len(self.data))
         progress_window.close()
 
+
 class DeviceDataUploader:
 
     @staticmethod
@@ -103,39 +108,47 @@ class DeviceDataUploader:
         return data, action
 
     @staticmethod
+    def get_bc_type(profile):
+        if profile.bc_type == 0:
+            return 1
+        if profile.bc_type == 1:
+            return 7
+        if profile.bc_type == 2:
+            return 9
+        raise Exception("Unsupported drag model")
+
+    @staticmethod
+    def get_drag_model(profile) -> (float, list | None):
+        if profile.bc_type == 0 or profile.bc_type == 1:
+            coefs = [
+                BCPoint(V=c.mv / 10, BC=c.bc_cd / 10000)
+                for c in profile.coef_rows
+                if c.bc_cd > 0
+            ]
+            if len(coefs) <= 0:
+                raise Exception("Expected at least one coefficient")
+            if len(coefs) == 1:
+                return coefs[0].BC, None
+            model = DragModelMultiBC(
+                bc_points=coefs,
+                drag_table=TableG7 if profile.bc_type == 1 else TableG1,
+                weight=profile.b_weight / 10,
+                length=profile.b_length / 1000,
+                diameter=profile.b_diameter / 1000,
+            )
+            table = [{"mach": row.Mach, "cd": row.CD} for row in model.drag_table]
+            return 1, table
+        if profile.bc_type == 2:
+            table = [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
+            return 1, table
+        raise Exception("Unsupported drag model")
+
+    @staticmethod
     def a7p2lpc(payload):
 
-        def get_bc_type(profile):
-            print(profile.bc_type)
-            if profile.bc_type == 0:
-                return 1
-            if profile.bc_type == 1:
-                return 7
-            if profile.bc_type == 2:
-                return 9
-            raise Exception("Unsupported drag model")
-
-        def get_bc_value(profile):
-            if profile.bc_type == 0 or profile.bc_type == 1:
-                coefs = [row for row in profile.coef_rows if row.bc_cd > 0]
-                if len(coefs) == 1:
-                    return coefs[0].bc_cd / 10000
-                if len(coefs) > 1:
-                    return 1
-                else:
-                    raise Exception("Multi-BC Unsupported yet")
-            if profile.bc_type == 2:
-                return 1
-            raise Exception("Unsupported drag model")
-
-        def get_drag_model(profile):
-            if profile.bc_type == 0 or profile.bc_type == 1:
-                return None
-            if profile.bc_type == 2:
-                return [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
-            raise Exception("Unsupported drag model")
-
         profile = payload.profile
+
+        bc, cdm = DeviceDataUploader.get_drag_model(profile)
 
         return {
             "profile": {
@@ -156,8 +169,8 @@ class DeviceDataUploader:
                 },
                 "bullet": {
                     "name": profile.bullet_name,
-                    "drag_func": get_bc_type(profile),
-                    "bal_coeff": get_bc_value(profile),
+                    "drag_func": DeviceDataUploader.get_bc_type(profile),
+                    "bal_coeff": bc,
                     "diameter": profile.b_diameter / 1000,
                     "length": profile.b_length / 1000,
                     "weight": profile.b_weight / 10
@@ -166,7 +179,7 @@ class DeviceDataUploader:
                     "temperature": int(profile.c_zero_air_temperature // 1),
                     "p_temperature": int(profile.c_zero_p_temperature // 1),
                     "humidity": int(profile.c_zero_air_humidity // 1),
-                    "pressure":  int(profile.c_zero_air_pressure / 1.33322 // 10),
+                    "pressure": int(profile.c_zero_air_pressure / 1.33322 // 10),
                     "wind_speed": 0,
                     "wind_angle": 0,
                     "altitude": 0,
@@ -181,7 +194,7 @@ class DeviceDataUploader:
                 "z": 0,
                 "y": -58.533750000000005
             },
-            "drag_func": get_drag_model(profile),
+            "drag_func": cdm,
             "distances": [int(p // 100) for p in profile.distances]
         }
 
