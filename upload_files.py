@@ -125,7 +125,6 @@ class BCPointCustom:
             raise ValueError("You cannot specify both 'Mach' and 'V' at the same time")
 
         if not Mach and not isinstance(V, (float, int)):
-            print(Mach, V)
             raise ValueError("One of 'Mach' and 'V' must be specified")
 
         self.BC = BC
@@ -146,7 +145,6 @@ class DeviceDataUploader:
                 for c in profile.coef_rows
                 if c.bc_cd > 0
             ]
-            print(len(coefs))
             if len(coefs) <= 0:
                 raise Exception("Expected at least one coefficient")
             if len(coefs) == 1:
@@ -166,12 +164,11 @@ class DeviceDataUploader:
         raise Exception("Unsupported drag model")
 
     @staticmethod
-    def a7p2lpc(payload, clicks):
+    def a7p2lpc(payload, clicks, uuid=""):
 
         profile = payload.profile
-
+        reset_zero = profile.device_uuid != uuid
         dm_type, bc, cdm = DeviceDataUploader.get_drag_model(profile)
-        print(clicks.pClickX, clicks.pClickY)
 
         return BallisticProfile(**{
             "profile": {
@@ -213,9 +210,9 @@ class DeviceDataUploader:
                 }
             },
             "zeroing": {
-                "x": profile.zero_x * clicks.pClickX / 1000000,
+                "x": 0 if reset_zero else profile.zero_x * clicks.pClickX / 1000000,
                 "z": 0,
-                "y": -profile.zero_y * clicks.pClickY / 1000000
+                "y": 0 if reset_zero else -profile.zero_y * clicks.pClickY / 1000000
             },
             "drag_func": cdm,
             "distances": [int(p // 100) for p in profile.distances][:97]
@@ -242,6 +239,9 @@ class DeviceDataUploader:
         if err:
             return
         clicks = profiles.header.c_sight_data.clicks
+        serial_num = info.serial_number_device
+        uuid = "00000000-0000-0000-0000-000000000000"
+        uuid = uuid[:-len(serial_num)] + serial_num
 
         json_image = {
             "header": {
@@ -267,7 +267,7 @@ class DeviceDataUploader:
                 }
             },
             "profiles": [
-                DeviceDataUploader.a7p2lpc(payload, clicks) for payload in datas
+                DeviceDataUploader.a7p2lpc(payload, clicks, uuid) for payload in datas
             ]
         }
 
