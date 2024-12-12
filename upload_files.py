@@ -9,7 +9,7 @@ from py_ballisticcalc import Unit, DragModelMultiBC, PreferredUnits, TableG7, Ta
 from rich.progress import Task
 
 from cutom_popup import CustomActionPopup, ErrorPopup
-from download_files import DeviceDataDownload, Progress, round_to_quarter
+from download_files import DeviceDataDownload, Progress
 
 PreferredUnits.weight = Unit.Grain
 PreferredUnits.length = Unit.Inch

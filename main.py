@@ -1,7 +1,8 @@
 import FreeSimpleGUI as Sg
 
 from cutom_popup import CustomActionPopup
-from upload_files import OpenFiles, SelectFiles
+from upload_files import DeviceDataUploader
+from download_files import DeviceDataDownload
 
 
 class App:
@@ -65,27 +66,10 @@ class App:
         print(f"{key} clicked")
 
         if key == "upld":
-            self.upload()
+            DeviceDataUploader().compile_lpc()
         elif key == "dwnld":
             print(f"{key} uploaded")
-
-    def upload(self):
-        files = SelectFiles().files
-        if not files:
-            return
-
-        datas = OpenFiles(files).data
-        if not datas:
-            return
-
-        if CustomActionPopup(
-                "Are you sure to write data to the device?\nAfter pressing ok you can't undo this action",
-                title="ALERT!",
-                actions=['Cancel', 'Submit']
-        ).open() != 'Submit':
-            return
-
-        # Example usage
+            DeviceDataDownload().compile_a7p()
 
 
 if __name__ == "__main__":
