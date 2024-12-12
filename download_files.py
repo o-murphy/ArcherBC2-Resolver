@@ -10,13 +10,13 @@ from archerdfu.dfus.archrw import ArcherRW
 from archerdfu.factory.caliber_icon import CaliberIcon
 from archerdfu.factory.profiles import ProfileBuilder, BallisticProfile
 from rich.progress import Task
+
 from cutom_popup import ErrorPopup
-
-
 
 DEFAULT_APP_DIR = os.path.join(os.path.expanduser("~"), "ArcherBC2-Resolver")
 
 os.makedirs(DEFAULT_APP_DIR, exist_ok=True)
+
 
 class Progress:
     def __init__(self, title="Progress"):
@@ -151,7 +151,6 @@ class DeviceDataDownload(ArcherRW):
             reticles_progress.close()
             return reticles, error
 
-
     def compile_a7p(self):
 
         profiles, info, err = self.get_profiles()
@@ -227,16 +226,24 @@ def get_coef_rows(profile, drag):
     if profile.bullet.drag_func == 7 or profile.bullet.drag_func == 1:
         return (A7PFactory.DragPoint(profile.bullet.bal_coeff, 0.),)
     if drag:
+
+        seen = set()
         output_drag = []
         for container in drag:
             mach, cd = container.mach, container.cd
-            output_drag.append(
-                A7PFactory.DragPoint(
-                    coeff=cd,
-                    velocity=mach
+
+            key = round(mach, 4)
+
+            if key not in seen and key != 0:
+                output_drag.append(
+                    A7PFactory.DragPoint(
+                        coeff=cd,
+                        velocity=int(key*1000)
+                    )
                 )
-            )
-        return tuple(output_drag)
+                seen.add(key)
+
+        return output_drag
     raise Exception("Error on loading drag model")
 
 
@@ -257,7 +264,7 @@ def create_a7p(bprofile: BallisticProfile, clicks, serial_num: str):
             name=profile.weapon.name,
             short_name_top=CaliberIcon.trunc_caliber(profile.weapon.cal_name),
             short_name_bot=f"{stringify_float(profile.bullet.weight)}gr",
-            user_note=f"{profile.weapon.desc}"
+            user_note=f"Generated with ArcherBC2 Resolver"
         ),
         barrel=A7PFactory.Barrel(
             caliber=profile.weapon.cal_name,

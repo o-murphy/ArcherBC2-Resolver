@@ -1,18 +1,22 @@
+from dataclasses import dataclass
+from typing import Optional, Union
+
 import FreeSimpleGUI as Sg
 from a7p import A7PFile, A7PDataError
 from a7p.protovalidate import ValidationError
-from archerdfu.factory.profiles import ProfileBuilder, ProfilesPack
-from py_ballisticcalc import Unit, DragModelMultiBC, PreferredUnits, BCPoint, TableG7, TableG1
+from archerdfu.factory.profiles import ProfileBuilder, ProfilesPack, BallisticProfile
+from py_ballisticcalc import Unit, DragModelMultiBC, PreferredUnits, TableG7, TableG1, Velocity
 from rich.progress import Task
 
 from cutom_popup import CustomActionPopup, ErrorPopup
-from download_files import DeviceDataDownload, Progress
+from download_files import DeviceDataDownload, Progress, round_to_quarter
 
 PreferredUnits.weight = Unit.Grain
 PreferredUnits.length = Unit.Inch
 PreferredUnits.diameter = Unit.Inch
 PreferredUnits.velocity = Unit.MPS
 
+cSpeedOfSoundMetric = 340.0  # Speed of sound in standard atmosphere, in m/s
 
 class SelectFiles:
     def __init__(self):
@@ -77,9 +81,6 @@ class OpenFiles:
         print("Valid files count:", len(self.data))
         progress_window.close()
 
-
-class DeviceDataUploader:
-
     @staticmethod
     def open_file(file):
         data, action = None, None
@@ -107,28 +108,49 @@ class DeviceDataUploader:
             ).open()
         return data, action
 
-    @staticmethod
-    def get_bc_type(profile):
-        if profile.bc_type == 0:
-            return 1
-        if profile.bc_type == 1:
-            return 7
-        if profile.bc_type == 2:
-            return 9
-        raise Exception("Unsupported drag model")
+
+@dataclass(order=True)
+class BCPointCustom:
+    """For multi-bc drag models, designed to sort by Mach ascending"""
+
+    def __init__(self,
+                 BC: float,
+                 Mach: Optional[float] = None,
+                 V: Optional[Union[float, Velocity]] = None):
+
+        if BC <= 0:
+            raise ValueError('Ballistic coefficient must be positive')
+
+        if Mach and V:
+            raise ValueError("You cannot specify both 'Mach' and 'V' at the same time")
+
+        if not Mach and not isinstance(V, (float, int)):
+            print(Mach, V)
+            raise ValueError("One of 'Mach' and 'V' must be specified")
+
+        self.BC = BC
+        self.V = PreferredUnits.velocity(V or 0)
+        if V:
+            self.Mach = (self.V >> Velocity.MPS) / cSpeedOfSoundMetric
+        elif Mach:
+            self.Mach = Mach
+
+
+class DeviceDataUploader:
 
     @staticmethod
     def get_drag_model(profile) -> (float, list | None):
         if profile.bc_type == 0 or profile.bc_type == 1:
             coefs = [
-                BCPoint(V=c.mv / 10, BC=c.bc_cd / 10000)
+                BCPointCustom(V=c.mv / 10, BC=c.bc_cd / 10000)
                 for c in profile.coef_rows
                 if c.bc_cd > 0
             ]
+            print(len(coefs))
             if len(coefs) <= 0:
                 raise Exception("Expected at least one coefficient")
             if len(coefs) == 1:
-                return coefs[0].BC, None
+                return 1 if profile.bc_type == 0 else 7, coefs[0].BC, None
             model = DragModelMultiBC(
                 bc_points=coefs,
                 drag_table=TableG7 if profile.bc_type == 1 else TableG1,
@@ -137,24 +159,25 @@ class DeviceDataUploader:
                 diameter=profile.b_diameter / 1000,
             )
             table = [{"mach": row.Mach, "cd": row.CD} for row in model.drag_table]
-            return 1, table
+            return 9, 1, table
         if profile.bc_type == 2:
             table = [{"mach": row.mv / 10, "cd": row.bc_cd / 10000} for row in profile.coef_rows]
-            return 1, table
+            return 9, 1, table
         raise Exception("Unsupported drag model")
 
     @staticmethod
-    def a7p2lpc(payload):
+    def a7p2lpc(payload, clicks):
 
         profile = payload.profile
 
-        bc, cdm = DeviceDataUploader.get_drag_model(profile)
+        dm_type, bc, cdm = DeviceDataUploader.get_drag_model(profile)
+        print(clicks.pClickX, clicks.pClickY)
 
-        return {
+        return BallisticProfile(**{
             "profile": {
                 "weapon": {
                     "name": profile.profile_name,
-                    "desc": profile.user_note,
+                    "desc": profile.profile_name,
                     "cal_name": profile.caliber,
                     "sight_height": profile.sc_height,
                     "zero_dist": int(profile.distances[profile.c_zero_distance_idx] // 100),
@@ -168,8 +191,8 @@ class DeviceDataUploader:
                     "powder_sens": profile.c_t_coeff / 1000
                 },
                 "bullet": {
-                    "name": profile.bullet_name,
-                    "drag_func": DeviceDataUploader.get_bc_type(profile),
+                    "name": profile.bullet_name + " (A7P)",
+                    "drag_func": dm_type,
                     "bal_coeff": bc,
                     "diameter": profile.b_diameter / 1000,
                     "length": profile.b_length / 1000,
@@ -190,13 +213,13 @@ class DeviceDataUploader:
                 }
             },
             "zeroing": {
-                "x": -27.6705,
+                "x": profile.zero_x * clicks.pClickX / 1000000,
                 "z": 0,
-                "y": -58.533750000000005
+                "y": -profile.zero_y * clicks.pClickY / 1000000
             },
             "drag_func": cdm,
-            "distances": [int(p // 100) for p in profile.distances]
-        }
+            "distances": [int(p // 100) for p in profile.distances][:97]
+        })
 
     @staticmethod
     def compile_lpc():
@@ -215,13 +238,18 @@ class DeviceDataUploader:
         ).open() != 'Submit':
             return
 
+        profiles, info, err = DeviceDataDownload().get_profiles()
+        if err:
+            return
+        clicks = profiles.header.c_sight_data.clicks
+
         json_image = {
             "header": {
                 "c_sight_data": {
                     "sight_name": "ARCHER DEVICE",
                     "clicks": {
-                        "pClickX": 1419,
-                        "pClickY": 1419
+                        "pClickX": int(clicks.pClickY),
+                        "pClickY": int(clicks.pClickY)
                     }
                 },
                 "c_envir": {
@@ -239,7 +267,7 @@ class DeviceDataUploader:
                 }
             },
             "profiles": [
-                DeviceDataUploader.a7p2lpc(payload) for payload in datas
+                DeviceDataUploader.a7p2lpc(payload, clicks) for payload in datas
             ]
         }
 
@@ -251,7 +279,7 @@ class DeviceDataUploader:
         try:
             dev = DeviceDataDownload().find()
             image = ProfilesPack(**json_image)
-            image.sort()
+            # image.sort()
             profiles_progress.open()
             load_status = ProfileBuilder.write_to_dev(dev, image, callback=profiles_callback)
 
